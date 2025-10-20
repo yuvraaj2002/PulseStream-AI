@@ -2,6 +2,7 @@ import requests,json, time
 from kafka import KafkaProducer
 
 API_KEY = "31514b9d11b242dc9cb7c2eef6d658eb"
+#A#PI_KEY="a0534c50-1856-4ff3-a2ad-6cb23e067383"
 producer = KafkaProducer(
     bootstrap_servers=['localhost:29092'],
     value_serializer=lambda v: json.dumps(v).encode('utf-8')
@@ -25,7 +26,7 @@ def fetch_news():
             "url":article["url"],
             "publishedAt":article["publishedAt"]
         }
-        producer.send("raw_news_feed",value=data)
+        producer.send("raw_new_feed",value=data)
         
 while True:
     fetch_news()

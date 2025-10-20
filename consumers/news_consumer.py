@@ -4,17 +4,16 @@ from langdetect import detect
 import json, re
 
 consumer = KafkaConsumer(
-    'raw_news_feed',
-    bootstrap_servers=['localhost:9092'],
-    group_id='pulse_cleaner_group_v3',       # NEW GROUP ID (forces fresh read)
-    auto_offset_reset='earliest',            # start from beginning
-    enable_auto_commit=False,                # avoid skipping committed offsets
-    consumer_timeout_ms=10000,               # stop after 10s if no new data
+    'raw_new_feed',
+    bootstrap_servers=['localhost:29092'],
+    group_id=None,
+    auto_offset_reset='earliest',
+    enable_auto_commit=False,
     value_deserializer=lambda v: json.loads(v.decode('utf-8'))
 )
 
 producer = KafkaProducer(
-    bootstrap_servers=['localhost:9092'],
+    bootstrap_servers=['localhost:29092'],
     value_serializer=lambda v: json.dumps(v).encode('utf-8')
 )
 
@@ -36,11 +35,12 @@ def analyze_sentiment(text):
     else:
         return polarity, "neutral"
 
+print(" Reading messages from raw_news_feed...")
 count = 0
 for msg in consumer:
     try:
         data = msg.value
-        text = data.get("description") or data.get("text") or ""
+        text = data.get("description") or ""
         cleaned_text = clean_text(text)
         lang = detect(cleaned_text) if cleaned_text else "unknown"
         polarity, sentiment = analyze_sentiment(cleaned_text)
@@ -56,10 +56,10 @@ for msg in consumer:
             "url": data.get("url", "")
         }
 
-        producer.send("clean_news_feed", value=enriched)
-        print(f"✅ Cleaned & sent: {enriched['title'][:60]}...")
+        producer.send("cleaned_news_feed", value=enriched)
+        print(f"Cleaned & sent: {enriched['title']}")
         count += 1
     except Exception as e:
-        print(f"❌ Error processing message: {e}")
+        print("Error:", e)
 
-print(f"🔹 Finished reading {count} messages.")
+print(f"Finished reading {count} messages.")
