@@ -1,4 +1,5 @@
 version: "3.8"
+
 services:
   zookeeper:
     image: confluentinc/cp-zookeeper:7.4.1
@@ -13,8 +14,8 @@ services:
     image: confluentinc/cp-kafka:7.4.1
     container_name: kafka
     ports:
-    - "9092:9092"
-    - "29092:29092"
+      - "9092:9092"
+      - "29092:29092"
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
@@ -23,7 +24,9 @@ services:
       KAFKA_LISTENERS: INTERNAL://:9092,EXTERNAL://:29092
       KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    volumes:
+      - kafka_data:/var/lib/kafka/data   # ✅ Persistent Kafka storage
 
   kafdrop:
     image: obsidiandynamics/kafdrop
@@ -44,28 +47,28 @@ services:
       POSTGRES_PASSWORD: airflow
       POSTGRES_DB: airflow
     volumes:
-    - ./postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
     ports:
-    - "5432:5432"
-
+      - "5432:5432"
 
   airflow:
     image: apache/airflow:2.9.0
     container_name: airflow
     restart: always
     depends_on:
-    - kafka
-    - zookeeper
-    - postgres
+      - kafka
+      - zookeeper
+      - postgres
     ports:
-    - "8080:8080"
+      - "8080:8080"
     environment:
-    - AIRFLOW__CORE__EXECUTOR=LocalExecutor
-    - AIRFLOW__CORE__FERNET_KEY=YOUR_FERNET_KEY
-    - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres/airflow
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__CORE__FERNET_KEY=YOUR_FERNET_KEY
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres/airflow
     command: webserver
     volumes:
-    - ./dags:/opt/airflow/dags
+      - ./dags:/opt/airflow/dags
 
-
-
+volumes:
+  kafka_data:
+  postgres_data:
