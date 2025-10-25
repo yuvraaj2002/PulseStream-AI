@@ -1,21 +1,6 @@
-
 version: 2
-
 models:
-  - name: my_first_dbt_model
-    description: "A starter dbt model"
-    columns:
-      - name: id
-        description: "The primary key for this table"
-        data_tests:
-          - unique
-          - not_null
-
-  - name: my_second_dbt_model
-    description: "A starter dbt model"
-    columns:
-      - name: id
-        description: "The primary key for this table"
-        data_tests:
-          - unique
-          - not_null
+  - name: stg_news_raw
+    description: "Cleansed staging model for raw Kafka news data"
+  - name: dim_topics
+    description: "Topic-level sentiment and polarity insights"
