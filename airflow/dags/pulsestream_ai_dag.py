@@ -1,32 +1,38 @@
-from datetime import datetime, timedelta
 from airflow import DAG
-from airflow.operators.bash import BashOperator
+from airflow.operators.python import PythonOperator
+from airflow.operators.dagrun_operator import TriggerDagRunOperator
+from airflow.utils.dates import days_ago
+from datetime import timedelta
 
 default_args = {
-    "owner": "pulsestream",
-    "retries": 1,
-    "retry_delay": timedelta(minutes=2)
+    'owner': 'tanish',
+    'depends_on_past': False,
+    'email_on_failure': False,
+    'email_on_retry': False,
+    'retries': 1,
+    'retry_delay': timedelta(minutes=5),
 }
 
 with DAG(
-    dag_id="pulsestream_ai_pipeline",
-    start_date=datetime(2025, 1, 1),
-    schedule_interval="*/15 * * * *",   # every 15 minutes
-    catchup=False,
+    dag_id='pulsestream_ai_dag',
     default_args=default_args,
-    description="Orchestrate producer -> consumer for PulseStream-AI"
+    description='Main orchestration DAG for data ingestion',
+    schedule_interval='@daily',
+    start_date=days_ago(1),
+    catchup=False,
 ) as dag:
+    
+    def extract_data():
+        print("📥 Extracting data for PulseStream AI...")
 
-    # 1) Produce a fresh batch of raw news
-    produce_raw = BashOperator(
-        task_id="produce_raw_feed",
-        bash_command="python /opt/pulsestream/producers/news_producer.py"
+    task_extract = PythonOperator(
+        task_id='extract_data',
+        python_callable=extract_data
     )
 
-    # 2) Consume-clean-enrich that batch into cleaned_news_feed
-    consume_clean = BashOperator(
-        task_id="consume_and_clean",
-        bash_command="python /opt/pulsestream/consumers/news_consumer.py"
+    trigger_training = TriggerDagRunOperator(
+        task_id='trigger_model_training',
+        trigger_dag_id='model_training_dag'
     )
 
-    produce_raw >> consume_clean
+    task_extract >> trigger_training
