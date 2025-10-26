@@ -54,15 +54,26 @@ services:
       - "5432:5432"
 
   airflow-init:
-    image: apache/airflow:2.9.0
-    container_name: airflow_init
-    depends_on:
-      - postgres
-    environment:
-      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
-      - AIRFLOW__CORE__FERNET_KEY=bmy5gdl8RnWZgbgE8Cw3jV9Jc2gZ8mV4sdfbYtT5vCg=
-      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres/airflow
-    command: bash -c "airflow db init && airflow users create --username admin --password admin --firstname Tanish --lastname Hanjra --role Admin --email tanish@example.com"
+      image: apache/airflow:2.9.0
+      container_name: airflow_init
+      entrypoint: >
+        sh -c "
+        airflow db init &&
+        airflow users create
+          --username admin
+          --password admin
+          --firstname Tanish
+          --lastname Hanzra
+          --role Admin
+          --email tanishkaur03@gmail.com
+        "
+      depends_on:
+        - postgres
+      environment:
+        - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+        - AIRFLOW__CORE__FERNET_KEY=bmy5gdl8RnWZgbgE8Cw3jV9Jc2gZ8mV4sdfbYtT5vCg=
+        - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres/airflow
+
 
   airflow:
     image: apache/airflow:2.9.0
@@ -80,9 +91,10 @@ services:
       - AIRFLOW__CORE__FERNET_KEY=bmy5gdl8RnWZgbgE8Cw3jV9Jc2gZ8mV4sdfbYtT5vCg=
       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres/airflow
     volumes:
-      - ./dags:/opt/airflow/dags
+      - "C:/Users/Dell/Desktop/PulseStream-AI/airflow/dags:/opt/airflow/dags"
+      - "C:/Users/Dell/Desktop/PulseStream-AI/airflow/logs:/opt/airflow/logs"
       - airflow_logs:/opt/airflow/logs
-    command: bash -c "airflow scheduler & airflow webserver"
+    command: bash -c "pip install scikit-learn && airflow scheduler & airflow webserver"
 
 volumes:
   kafka_data:
