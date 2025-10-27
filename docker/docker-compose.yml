@@ -96,7 +96,25 @@ services:
       - airflow_logs:/opt/airflow/logs
     command: bash -c "pip install scikit-learn && airflow scheduler & airflow webserver"
 
+
+  recommender_api:
+    build: ../api
+    container_name: recommender_api
+    ports:
+      - "8000:8000"
+    environment:
+      SNOWFLAKE_USER: "Tanish"
+      SNOWFLAKE_PASSWORD: "Tanish123456789"
+      SNOWFLAKE_ACCOUNT: "XAPUZMR-GY39323"
+      SNOWFLAKE_DATABASE: "PULSESTREAM"
+      SNOWFLAKE_SCHEMA: "ANALYTICS"
+      SNOWFLAKE_WAREHOUSE: "COMPUTE_WH"
+    depends_on:
+      - airflow
+      - kafka
+
 volumes:
   kafka_data:
   postgres_data:
   airflow_logs:
+
