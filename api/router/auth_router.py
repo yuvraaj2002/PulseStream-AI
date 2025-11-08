@@ -1,4 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
+from api.utils.jwt_handler import create_password_reset_token,verify_token
+from api.utils.email_utils import send_reset_email
+from api.utils.password_hashing import get_password_hash
 from sqlmodel import Session, select
 from api.model.auth_model import User, UserCreate, UserRead
 from api.utils.database import get_session
@@ -27,3 +30,29 @@ def login_user(user: UserCreate, session: Session = Depends(get_session)):
 
     token = create_access_token({"sub": user.email})
     return {"access_token": token, "token_type": "bearer"}
+
+@router.post("/request-reset")
+def request_password_reset(email: str, session: Session = Depends(get_session)):
+    user = session.exec(select(User).where(User.email == email)).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    token = create_password_reset_token(email)
+    send_reset_email(email, token)
+    return {"status": "success", "message": "Reset link sent"}
+
+@router.post("/reset-password")
+def reset_password(token: str = Query(...), new_password: str = Query(...), session: Session = Depends(get_session)):
+    payload = verify_token(token)
+    if not payload or payload.get("purpose") != "reset":
+        raise HTTPException(status_code=400, detail="Invalid or expired token")
+
+    email = payload.get("sub")
+    user = session.exec(select(User).where(User.email == email)).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    user.hashed_password = get_password_hash(new_password)
+    session.add(user)
+    session.commit()
+    return {"status": "success", "message": "Password reset successfully"}
