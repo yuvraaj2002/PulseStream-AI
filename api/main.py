@@ -1,12 +1,16 @@
-from fastapi import FastAPI, Query, HTTPException
+from fastapi import FastAPI, Query, HTTPException, Depends 
 from pydantic import BaseModel
+from api.utils.database import init_db, get_session
+from sqlmodel import Session, select
+from api.model.auth_model import User
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import linear_kernel
 import pandas as pd
 import pickle
 import numpy as np
 import os
-from utils.feedback_handler import save_feedback
+from api.router.auth_router import router as auth_router
+from api.utils.feedback_handler import save_feedback
 
 app = FastAPI(
     title="PulseStream Recommender API",
@@ -22,6 +26,21 @@ MODEL_PATH = os.path.join(BASE_DIR, "model", "vectorizer.pkl")
 TFIDF_PATH = os.path.join(BASE_DIR, "model", "tfidf_matrix.pkl")
 META_PATH = os.path.join(BASE_DIR, "data", "articles_meta.csv")
 
+
+@app.on_event("startup")
+def on_startup():
+    init_db()
+    
+app.include_router(auth_router)
+    
+@app.get("/")
+def home():
+    return {"message":"Connected to Neon DB successfully"}
+
+@app.get("/users")
+def get_users(session: Session = Depends(get_session)):
+    users = session.exec(select(User)).all()
+    return users
 # ---------------------------
 # INIT / LOAD DATA
 # ---------------------------

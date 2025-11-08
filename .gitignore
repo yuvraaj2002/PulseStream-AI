@@ -205,3 +205,12 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+
+SNOWFLAKE_ACCOUNT=XAPUZMR-GY39323
+SNOWFLAKE_USER=Tanish
+SNOWFLAKE_PASSWORD=Tanish123456789
+SNOWFLAKE_WAREHOUSE=COMPUTE_WH
+SNOWFLAKE_DATABASE=PULSESTREAM
+SNOWFLAKE_SCHEMA=RAW_DATA
+DATABASE_URL=postgresql://neondb_owner:npg_H5QgCK8poYhW@ep-soft-dawn-aeb84k5w-pooler.c-2.us-east-2.aws.neon.tech/neondb?sslmode=require
